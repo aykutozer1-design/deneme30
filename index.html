@@ -107,10 +107,14 @@
         appId: "1:156887660775:web:19a99cdd43f857ad928a42"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    // Firebase başlatma kontrolü
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
     let localState = null;
 
+    // Veritabanı dinleyicisi senkronizasyonu güçlendirildi
     db.ref('pisiciler_v1').on('value', (snapshot) => {
         localState = snapshot.val();
         
@@ -128,11 +132,12 @@
                 lastKrals: ["Eser"]
             };
             db.ref('pisiciler_v1').set(localState);
-            return;
         }
 
         localState.players.forEach(p => { if(!p.status) p.status = "NORMAL"; });
         renderUI(localState);
+    }, (error) => {
+        console.error("Firebase Veri Çekme Hatası:", error);
     });
 
     function renderUI(data) {
@@ -146,69 +151,4 @@
             let sTxt = `<span style="color:#cbd5e1; font-style:italic;">Sivil</span>`;
             
             if(p.status === "DUBLE") {
-                sTxt = `<span class="status-badge badge-duble">👑 MEHMET (DUBLE) 👑</span>`;
-                activeSpecialists.push(`<span class="status-badge badge-duble" style="font-size:10px; margin-bottom:2px;">${p.name} (Duble 👑)</span>`);
-            } else if(p.status === "PRENSES") {
-                sTxt = `<span class="status-badge badge-prenses">PRENSES</span>`;
-                activeSpecialists.push(p.name + " (👑)");
-            } else if(p.status === "DILBER") {
-                sTxt = `<span class="status-badge badge-dilber">💃 DİLBER 💃</span>`;
-                activeSpecialists.push(`<span class="status-badge badge-dilber" style="font-size:9px; margin-bottom:2px; display:inline-block;">${p.name}</span>`);
-            }
-            tbody.innerHTML += `<tr><td style="font-weight:600;">${p.name}</td><td><b>${p.score}</b></td><td>${p.totalKral}</td><td>${p.totalPrenses}</td><td>${sTxt}</td></tr>`;
-        });
-        document.getElementById('currentKral').innerText = data.lastKrals?.length > 0 ? data.lastKrals.join(", ") : "-";
-        document.getElementById('currentPrensesList').innerHTML = activeSpecialists.length > 0 ? activeSpecialists.join("<br>") : "-";
-    }
-
-    function askAdmin() {
-        if(prompt("Şifre:") === "1117") {
-            document.getElementById('adminPanel').style.display = 'block';
-            initForm();
-            initStatusForm();
-        }
-    }
-
-    function initForm() {
-        const container = document.getElementById('entryForm');
-        if(!container || container.innerHTML !== "") return;
-        const pNames = localState.players.map(p => p.name);
-        for(let p=1; p<=3; p++) {
-            let h = `<div style="background:white; padding:10px; border-radius:8px; border:1px solid #ddd;"><b>Parti ${p}</b><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px;">`;
-            for(let r=1; r<=4; r++) {
-                h += `<select id="p${p}_r${r}" style="padding:8px; font-size:12px;"><option value="">${r}. Sıra</option>`;
-                pNames.forEach(n => h += `<option value="${n}">${n}</option>`);
-                h += `</select>`;
-            }
-            container.innerHTML += h + `</div></div>`;
-        }
-    }
-
-    function initStatusForm() {
-        const container = document.getElementById('statusForm');
-        if(!container || container.innerHTML !== "") return;
-        
-        localState.players.forEach(p => {
-            container.innerHTML += `
-                <div style="background:white; padding:10px; border-radius:6px; display:flex; justify-content:between; align-items:center; gap:10px; border:1px solid #cbd5e1;">
-                    <span style="font-weight:bold; min-width:70px;">${p.name}:</span>
-                    <select id="status_${p.name}" style="padding:6px; font-size:12px; flex:1;">
-                        <option value="NORMAL" ${p.status === 'NORMAL' ? 'selected' : ''}>Sivil</option>
-                        <option value="PRENSES" ${p.status === 'PRENSES' ? 'selected' : ''}>Prenses</option>
-                        <option value="DUBLE" ${p.status === 'DUBLE' ? 'selected' : ''}>Duble Prenses</option>
-                        <option value="DILBER" ${p.status === 'DILBER' ? 'selected' : ''}>Dilber (Flaşörlü)</option>
-                    </select>
-                    <label style="font-size:11px; display:flex; align-items:center; gap:2px;">
-                        <input type="checkbox" id="kral_${p.name}" ${localState.lastKrals?.includes(p.name) ? 'checked' : ''}> Kral
-                    </label>
-                </div>`;
-        });
-    }
-
-    function processGame() {
-        if(!localState) return alert("Veri yüklenemedi!");
-        let res = {1:[], 2:[], 3:[]};
-        let set = new Set();
-        try {
-            for(let p=1; p<=3; p++) {
-                for(let r=
+                sTxt = `<span class="status-badge badge-duble">👑 MEHM
